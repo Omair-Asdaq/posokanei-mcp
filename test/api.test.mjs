@@ -223,6 +223,28 @@ test("a non-JSON 200 response is reported as a protocol error, not a network err
   );
 });
 
+test("a refused request reports the status without echoing the upstream body", async () => {
+  const body = "<!doctype html><title>403</title>403 Forbidden";
+  const client = new PosoKaneiClient({
+    baseUrl: "https://example.test",
+    fetchImpl: async () => new Response(body, { status: 403 }),
+    minIntervalMs: 0
+  });
+
+  await assert.rejects(
+    client.getStats(),
+    (error) => {
+      assert.ok(error instanceof PosoKaneiApiError);
+      assert.equal(error.status, 403);
+      assert.equal(error.responseBody, body);
+      assert.match(error.message, /refused the request \(HTTP 403\)/);
+      assert.doesNotMatch(error.message, /<!doctype html>/);
+      return true;
+    },
+    "expected a 403 to fail with a short message"
+  );
+});
+
 function restoreEnv(name, value) {
   if (value === undefined) {
     delete process.env[name];

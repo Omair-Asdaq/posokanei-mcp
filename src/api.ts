@@ -412,5 +412,8 @@ function messageForStatus(status: number, responseText: string): string {
   if (status >= 500) {
     return "PosoKanei API server error";
   }
+  if (status === 401 || status === 403) {
+    return `PosoKanei API refused the request (HTTP ${status}). The service may block this client or network.`;
+  }
   return `PosoKanei API request failed with status ${status}: ${responseText.slice(0, 500)}`;
 }
